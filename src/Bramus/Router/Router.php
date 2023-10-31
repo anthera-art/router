@@ -59,10 +59,6 @@ class Router
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
-        if ($methods === '*') {
-            $methods = 'GET|POST|PUT|DELETE|OPTIONS|PATCH|HEAD';
-        }
-        
         foreach (explode('|', $methods) as $method) {
             $this->beforeRoutes[$method][] = array(
                 'pattern' => $pattern,
@@ -78,13 +74,14 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function match($methods, $pattern, $fn)
+    public function match($methods, $pattern, $fn, $name = "unknown")
     {
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
         foreach (explode('|', $methods) as $method) {
             $this->afterRoutes[$method][] = array(
+                'name' => $name,
                 'pattern' => $pattern,
                 'fn' => $fn,
             );
@@ -108,9 +105,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function get($pattern, $fn)
+    public function get($pattern, $fn, $name = "unknown")
     {
-        $this->match('GET', $pattern, $fn);
+        $this->match('GET', $pattern, $fn, $name);
     }
 
     /**
@@ -119,9 +116,9 @@ class Router
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
-    public function post($pattern, $fn)
+    public function post($pattern, $fn, $name = "unknown")
     {
-        $this->match('POST', $pattern, $fn);
+        $this->match('POST', $pattern, $fn, $name);
     }
 
     /**
@@ -293,14 +290,12 @@ class Router
 
         // If no route was handled, trigger the 404 (if any)
         if ($numHandled === 0) {
-            if (isset($this->afterRoutes[$this->requestedMethod])) {
-                $this->trigger404($this->afterRoutes[$this->requestedMethod]);
-            } else {
-                $this->trigger404();
-            }
+            $this->trigger404($this->afterRoutes[$this->requestedMethod]);
         } // If a route was handled, perform the finish callback (if any)
-        elseif ($callback && is_callable($callback)) {
-            $callback();
+        else {
+            if ($callback && is_callable($callback)) {
+                $callback();
+            }
         }
 
         // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
