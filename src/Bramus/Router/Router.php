@@ -15,7 +15,7 @@ class Router
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = array();
+    public $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
